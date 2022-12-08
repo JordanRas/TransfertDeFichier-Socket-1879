@@ -2,6 +2,7 @@ package consti;
 
 import java.io.File;
 import java.net.Socket;
+import javax.swing.JPanel;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.io.FileInputStream;
@@ -15,11 +16,14 @@ import consti.Commun;
 public class Utilisateur{
     public Utilisateur(){}
 
-    public static void envoyer() throws Exception{
-        Commun commun = new Commun();
+    public static void envoyer(String path , Commun commun , String nomClient) throws Exception{
+        //Commun commun = new Commun();
+        File file = new File(path);
+        FileInputStream in = new FileInputStream(file);
+        int base = 1024;
 
         //En-tete a envoyer
-        String[] tab = {"Serveur 1" , "Serveur 2" , "Serveur 3" , "Client"};
+        String[] tab = {String.valueOf(in.available()) , String.valueOf(base) , file.getName() , nomClient};
 
 
         //Ouverture de la communication
@@ -34,7 +38,8 @@ public class Utilisateur{
         }
 
         //Envoi du fichier
-        commun.transfert(new FileInputStream(new File("Sary/Envoye/coupe.png")) , out , true);
+        commun.setType("envoyer");
+        commun.transfert(in , out , base ,  true);
 
             
             
@@ -42,13 +47,15 @@ public class Utilisateur{
         sock.close();
     }
 
-    public static void recevoir() throws Exception{
-        Commun commun = new Commun();
+    public static void recevoir(JPanel panel , Commun commun) throws Exception{
+        //Commun commun = new Commun();
 
-        
+        System.out.println("miandry recevoir");
+
         //Ouverture d'une connexion
         Socket sock = new ServerSocket(9001).accept();
         ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+        panel.setVisible(true);
         System.out.println("vita le mamoha connexion");
 
         //Reception de l'en-tete
@@ -63,7 +70,12 @@ public class Utilisateur{
 
 
         //Reception du fichier
-        commun.transfert(in , new FileOutputStream(new File("Sary/Recu/recu.png")) , true);
+        commun.setType("recevoir");
+        int base = Integer.parseInt(tab[1]);
+        commun.setMaximum(Integer.parseInt(tab[0]) / base);
+        commun.getTransfert().getProvenance().setText("Provenance de "+tab[3]);
+        commun.transfert(in , new FileOutputStream(new File("Recu/"+tab[2])) , base ,  true);
+        commun.getTransfert().getProvenance().setText("Provenance de ");
         System.out.println("vita le reception fichier");
 
         //Fermeture de la communication
@@ -77,6 +89,7 @@ public class Utilisateur{
         }
 
         System.out.println("vita le affiche en-tete");
+        System.out.println("vita le recevoir");
     }
 
 }
